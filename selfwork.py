@@ -53,6 +53,7 @@ def problem3_circle(n):
 print(problem3_circle(5))
 
 
+# 3.chess board problem
 import numpy as np
 
 def grid_cover(k: int, i: int, j: int):
