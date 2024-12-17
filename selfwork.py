@@ -57,19 +57,23 @@ print(problem3_circle(5))
 import numpy as np
 
 
-def grid_cover_iterative(k: int, i: int, j: int):
-    dic = {(1, 1): [[0, 4], [4, 4]], (1, 2): [[3, 0], [3, 3]], (2, 1): [[2, 2], [0, 2]], (2, 2): [[1, 1], [1, 0]]}
-    position = {1: 4, 2: 3, 3: 2, 4: 1}
+def grid_cover(k: int, i: int, j: int):
+    dic = {(1, 1): [[0, 4], [4, 4]], (1, 2): [[3, 0], [3, 3]], (2, 1): [[2, 2], [0, 2]],
+           (2, 2): [[1, 1], [1, 0]]}  # 初始情况，分治的基本状态
+    position = {1: 4, 2: 3, 3: 2, 4: 1}  # 定义了分治时的几种情况（填补虚拟黑块）
 
     stack = [(k, i, j)]
     grids = {}
 
+    # 采取堆栈减少递归深度
     while stack:
         k, i, j = stack.pop()
 
         if k == 1:
             grids[(k, i, j)] = dic[(i, j)]
         else:
+            # 以下是非常复杂的对四种情况的处理
+            # 其实是对分块后的四个矩阵再相加
             if (k - 1, i, j) not in grids:
                 stack.append((k, i, j))
                 stack.append((k - 1, 2 ** (k - 1), 1))
@@ -78,29 +82,43 @@ def grid_cover_iterative(k: int, i: int, j: int):
                 continue
 
             if i <= 2 ** (k - 1) and j <= 2 ** (k - 1):  # 1
-                grid = np.block([[grids[(k - 1, i, j)], grids[(k - 1, 2 ** (k - 1), 1)]],
-                                 [grids[(k - 1, 1, 1)], grids[(k - 1, 1, 2 ** (k - 1))]]])
-                grid[2 ** (k - 1)][2 ** (k - 1)-1], grid[2 ** (k - 1)][2 ** (k - 1)], grid[2 ** (k - 1)-1][
-                    2 ** (k - 1)] = position[1], position[1], position[1]
+                pro_1 = np.hstack((grids[(k - 1, i, j)], grids[(k - 1, 2 ** (k - 1), 1)]))
+                pro_2 = np.hstack((grids[(k - 1, 1, 2 ** (k - 1))], grids[(k - 1, 1, 1)]))
+                pro = np.append(pro_1, pro_2)
+                grid = np.reshape(pro, (2 ** k, 2 ** k))
+                grid[2 ** (k - 1) - 1][2 ** (k - 1)], grid[2 ** (k - 1)][2 ** (k - 1)], grid[2 ** (k - 1)][
+                    2 ** (k - 1) - 1] = position[1], position[1], position[1]
+
             elif i <= 2 ** (k - 1) and j > 2 ** (k - 1):  # 2
-                grid = np.block([[grids[(k - 1, 2 ** (k - 1), 2 ** (k - 1))], grids[(k - 1, i, j - 2 ** (k - 1))]],
-                                 [grids[(k - 1, 1, 2 ** (k - 1))], grids[(k - 1, 1, 1)]]])
-                grid[2 ** (k - 1)-1][2 ** (k - 1)-1], grid[2 ** (k - 1)][2 ** (k - 1)-1], grid[2 ** (k - 1)][
+                pro_1 = np.hstack((grids[(k - 1, 2 ** (k - 1), 2 ** (k - 1))], grids[(k - 1, i, j - 2 ** (k - 1))]))
+                pro_2 = np.hstack((grids[(k - 1, 1, 2 ** (k - 1))], grids[(k - 1, 1, 1)]))
+                pro = np.append(pro_1, pro_2)
+                grid = np.reshape(pro, (2 ** k, 2 ** k))
+                grid[2 ** (k - 1) - 1][2 ** (k - 1) - 1], grid[2 ** (k - 1)][2 ** (k - 1) - 1], grid[2 ** (k - 1)][
                     2 ** (k - 1)] = position[2], position[2], position[2]
+
             elif i > 2 ** (k - 1) and j <= 2 ** (k - 1):  # 3
-                grid = np.block([[grids[(k - 1, 2 ** (k - 1), 2 ** (k - 1))], grids[(k - 1, 2 ** (k - 1), 1)]],
-                                 [grids[(k - 1, i - 2 ** (k - 1), j)], grids[(k - 1, 1, 1)]]])
-                grid[2 ** (k - 1)-1][2 ** (k - 1)-1], grid[2 ** (k - 1)-1][2 ** (k - 1)], grid[2 ** (k - 1)][
+                pro_1 = np.hstack((grids[(k - 1, 2 ** (k - 1), 2 ** (k - 1))], grids[(k - 1, 2 ** (k - 1), 1)]))
+                pro_2 = np.hstack((grids[(k - 1, i - 2 ** (k - 1), j)], grids[(k - 1, 1, 1)]))
+                pro = np.append(pro_1, pro_2)
+                grid = np.reshape(pro, (2 ** k, 2 ** k))
+                grid[2 ** (k - 1) - 1][2 ** (k - 1) - 1], grid[2 ** (k - 1) - 1][2 ** (k - 1)], grid[2 ** (k - 1)][
                     2 ** (k - 1)] = position[3], position[3], position[3]
+
             elif i > 2 ** (k - 1) and j > 2 ** (k - 1):  # 4
-                grid = np.block([[grids[(k - 1, 2 ** (k - 1), 2 ** (k - 1))], grids[(k - 1, 2 ** (k - 1), 1)]],
-                                 [grids[(k - 1, 1, 2 ** (k - 1))], grids[(k - 1, i - 2 ** (k - 1), j - 2 ** (k - 1))]]])
-                grid[2 ** (k - 1)-1][2 ** (k - 1)-1], grid[2 ** (k - 1)-1][2 ** (k - 1)], grid[2 ** (k - 1)][
-                    2 ** (k - 1)-1] = position[4], position[4], position[4]
+                pro_1 = np.hstack((grids[(k - 1, 2 ** (k - 1), 2 ** (k - 1))], grids[(k - 1, 2 ** (k - 1), 1)]))
+                pro_2 = np.hstack((grids[(k - 1, 1, 2 ** (k - 1))], grids[(k - 1, i - 2 ** (k - 1), j - 2 ** (k - 1))]))
+                pro = np.append(pro_1, pro_2)
+                grid = np.reshape(pro, (2 ** k, 2 ** k))
+                grid[2 ** (k - 1) - 1][2 ** (k - 1) - 1], grid[2 ** (k - 1) - 1][2 ** (k - 1)], grid[2 ** (k - 1)][
+                    2 ** (k - 1) - 1] = position[4], position[4], position[4]
 
             grids[(k, i, j)] = grid
 
     return grids[(k, i, j)]
+
+
+print(grid_cover(2, 1, 1))
 
 
 print(grid_cover_iterative(2, 1, 2))
