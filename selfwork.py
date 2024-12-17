@@ -56,31 +56,51 @@ print(problem3_circle(5))
 # 3.chess board problem
 import numpy as np
 
-def grid_cover(k: int, i: int, j: int):
-    dic = {(1, 1): [[0, 4], [4, 4]], (1, 2): [[3, 0], [3, 3]], (2, 1): [[2, 2], [0, 2]], (2, 2): [[1, 1], [1, 0]]}  # 初始状态下的（2*2）
-    position = {1: 4, 2: 3, 3: 2, 4:1}      # 设计分块与填补的黑色色块的位置
-    reverse = {1: [grid_cover(k - 1, 2**(k-1), 1), grid_cover(k-1, 1,1), grid_cover(k - 1, 1, 2**(k-1))],
-               2: [grid_cover(k-1, 2**(k-1), 2**(k-1)), grid_cover(k-1, 1, 2**(k-1), ), grid_cover(k-1, 1, 1)],
-               3: [grid_cover(k-1, 2**(k-1), 2**(k-1)), grid_cover(k-1, 2**(k-1), 1), grid_cover(k-1, 1, 1)],
-               4: [grid_cover(k-1, 2**(k-1), 2**(k-1)), grid_cover(k-1, 2**(k-1), 1), grid_cover(k-1, 1, 2**(k-1))]}
-    # 在递归中需要使用的分块
-    if k == 1:
-        return dic[(i,j)]
-    if i <= 2**(k-1) and j <= 2**(k-1):     # 1
-        grid = np.block([[grid_cover(k-1, i, j), reverse[1][0]],
-                         [reverse[1][1],         reverse[1][2]]])
-        grid[2**(k-1)+1][2**(k-1)], grid[2**(k-1)+1][2**(k-1)+1], grid[2**(k-1)][2**(k-1)+1] = position[1],position[1],position[1]
-    elif i <= 2**(k-1) and j > 2**(k-1):    # 2
-        grid = np.block([[reverse[2][0], grid_cover(k-1, i, j-2**(k-1))],
-                         [reverse[2][1], reverse[2][2]]])
-        grid[2**(k-1)][2**(k-1)], grid[2**(k-1)+1][2**(k-1)], grid[2**(k-1)+1][2**(k-1)+1] = position[2],position[2],position[2]
-    elif i > 2**(k-1) and j <= 2**(k-1):    # 3
-        grid = np.block([[reverse[3][0],                  reverse[3][1]],
-                         [grid_cover(k-1, i-2**(k-1), j), reverse[3][2]]])
-        grid[2**(k-1)][2**(k-1)], grid[2**(k-1)][2**(k-1)+1], grid[2**(k-1)+1][2**(k-1)+1] = position[3],position[3],position[3]
-    elif i > 2**(k-1) and j > 2**(k-1):     # 4
-        grid = np.block([[reverse[4][0], reverse[4][1]],
-                         [reverse[4][2], grid_cover(k-1, i-2**(k-1), j-2**(k-1))]])
-        grid[2**(k-1)][2**(k-1)], grid[2**(k-1)][2**(k-1)+1], grid[2**(k-1)+1][2**(k-1)] = position[4],position[4],position[4]
 
-print(grid_cover(2, 1, 2))
+def grid_cover_iterative(k: int, i: int, j: int):
+    dic = {(1, 1): [[0, 4], [4, 4]], (1, 2): [[3, 0], [3, 3]], (2, 1): [[2, 2], [0, 2]], (2, 2): [[1, 1], [1, 0]]}
+    position = {1: 4, 2: 3, 3: 2, 4: 1}
+
+    stack = [(k, i, j)]
+    grids = {}
+
+    while stack:
+        k, i, j = stack.pop()
+
+        if k == 1:
+            grids[(k, i, j)] = dic[(i, j)]
+        else:
+            if (k - 1, i, j) not in grids:
+                stack.append((k, i, j))
+                stack.append((k - 1, 2 ** (k - 1), 1))
+                stack.append((k - 1, 1, 1))
+                stack.append((k - 1, 1, 2 ** (k - 1)))
+                continue
+
+            if i <= 2 ** (k - 1) and j <= 2 ** (k - 1):  # 1
+                grid = np.block([[grids[(k - 1, i, j)], grids[(k - 1, 2 ** (k - 1), 1)]],
+                                 [grids[(k - 1, 1, 1)], grids[(k - 1, 1, 2 ** (k - 1))]]])
+                grid[2 ** (k - 1)][2 ** (k - 1)-1], grid[2 ** (k - 1)][2 ** (k - 1)], grid[2 ** (k - 1)-1][
+                    2 ** (k - 1)] = position[1], position[1], position[1]
+            elif i <= 2 ** (k - 1) and j > 2 ** (k - 1):  # 2
+                grid = np.block([[grids[(k - 1, 2 ** (k - 1), 2 ** (k - 1))], grids[(k - 1, i, j - 2 ** (k - 1))]],
+                                 [grids[(k - 1, 1, 2 ** (k - 1))], grids[(k - 1, 1, 1)]]])
+                grid[2 ** (k - 1)-1][2 ** (k - 1)-1], grid[2 ** (k - 1)][2 ** (k - 1)-1], grid[2 ** (k - 1)][
+                    2 ** (k - 1)] = position[2], position[2], position[2]
+            elif i > 2 ** (k - 1) and j <= 2 ** (k - 1):  # 3
+                grid = np.block([[grids[(k - 1, 2 ** (k - 1), 2 ** (k - 1))], grids[(k - 1, 2 ** (k - 1), 1)]],
+                                 [grids[(k - 1, i - 2 ** (k - 1), j)], grids[(k - 1, 1, 1)]]])
+                grid[2 ** (k - 1)-1][2 ** (k - 1)-1], grid[2 ** (k - 1)-1][2 ** (k - 1)], grid[2 ** (k - 1)][
+                    2 ** (k - 1)] = position[3], position[3], position[3]
+            elif i > 2 ** (k - 1) and j > 2 ** (k - 1):  # 4
+                grid = np.block([[grids[(k - 1, 2 ** (k - 1), 2 ** (k - 1))], grids[(k - 1, 2 ** (k - 1), 1)]],
+                                 [grids[(k - 1, 1, 2 ** (k - 1))], grids[(k - 1, i - 2 ** (k - 1), j - 2 ** (k - 1))]]])
+                grid[2 ** (k - 1)-1][2 ** (k - 1)-1], grid[2 ** (k - 1)-1][2 ** (k - 1)], grid[2 ** (k - 1)][
+                    2 ** (k - 1)-1] = position[4], position[4], position[4]
+
+            grids[(k, i, j)] = grid
+
+    return grids[(k, i, j)]
+
+
+print(grid_cover_iterative(2, 1, 2))
