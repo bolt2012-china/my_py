@@ -51,3 +51,35 @@ def problem3_circle(n):
     l = n-2**m
     return 2*l+1
 print(problem3_circle(5))
+
+
+import numpy as np
+
+def grid_cover(k: int, i: int, j: int):
+    dic = {(1, 1): [[0, 4], [4, 4]], (1, 2): [[3, 0], [3, 3]], (2, 1): [[2, 2], [0, 2]], (2, 2): [[1, 1], [1, 0]]}  # 初始状态下的（2*2）
+    position = {1: 4, 2: 3, 3: 2, 4:1}      # 设计分块与填补的黑色色块的位置
+    reverse = {1: [grid_cover(k - 1, 2**(k-1), 1), grid_cover(k-1, 1,1), grid_cover(k - 1, 1, 2**(k-1))],
+               2: [grid_cover(k-1, 2**(k-1), 2**(k-1)), grid_cover(k-1, 1, 2**(k-1), ), grid_cover(k-1, 1, 1)],
+               3: [grid_cover(k-1, 2**(k-1), 2**(k-1)), grid_cover(k-1, 2**(k-1), 1), grid_cover(k-1, 1, 1)],
+               4: [grid_cover(k-1, 2**(k-1), 2**(k-1)), grid_cover(k-1, 2**(k-1), 1), grid_cover(k-1, 1, 2**(k-1))]}
+    # 在递归中需要使用的分块
+    if k == 1:
+        return dic[(i,j)]
+    if i <= 2**(k-1) and j <= 2**(k-1):     # 1
+        grid = np.block([[grid_cover(k-1, i, j), reverse[1][0]],
+                         [reverse[1][1],         reverse[1][2]]])
+        grid[2**(k-1)+1][2**(k-1)], grid[2**(k-1)+1][2**(k-1)+1], grid[2**(k-1)][2**(k-1)+1] = position[1],position[1],position[1]
+    elif i <= 2**(k-1) and j > 2**(k-1):    # 2
+        grid = np.block([[reverse[2][0], grid_cover(k-1, i, j-2**(k-1))],
+                         [reverse[2][1], reverse[2][2]]])
+        grid[2**(k-1)][2**(k-1)], grid[2**(k-1)+1][2**(k-1)], grid[2**(k-1)+1][2**(k-1)+1] = position[2],position[2],position[2]
+    elif i > 2**(k-1) and j <= 2**(k-1):    # 3
+        grid = np.block([[reverse[3][0],                  reverse[3][1]],
+                         [grid_cover(k-1, i-2**(k-1), j), reverse[3][2]]])
+        grid[2**(k-1)][2**(k-1)], grid[2**(k-1)][2**(k-1)+1], grid[2**(k-1)+1][2**(k-1)+1] = position[3],position[3],position[3]
+    elif i > 2**(k-1) and j > 2**(k-1):     # 4
+        grid = np.block([[reverse[4][0], reverse[4][1]],
+                         [reverse[4][2], grid_cover(k-1, i-2**(k-1), j-2**(k-1))]])
+        grid[2**(k-1)][2**(k-1)], grid[2**(k-1)][2**(k-1)+1], grid[2**(k-1)+1][2**(k-1)] = position[4],position[4],position[4]
+
+print(grid_cover(2, 1, 2))
