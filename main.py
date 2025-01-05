@@ -2,10 +2,10 @@
 """
 Created on Sat Jan  4 21:48:21 2025
 
-@author: sdy
+@author: 王颖颖， 夏雨杨， 施丹砚
 """
 
-import minimatrixsdy as mm
+import minimatrix as mm
 
 def test_matrix_operations():
     # 定义矩阵并输出
@@ -28,10 +28,9 @@ def test_matrix_operations():
     
     # 矩阵指定元素求和
     A = mm.Matrix(data=[[1, 2, 3], [4, 5, 6]])
-    
-    print(A.sum())
-    #print(A.sum(axis=0))
-    #print(A.sum(axis=1))
+
+    print(A.matrix_sum(axis=0))
+    print(A.matrix_sum(axis=1))
     #这组运行不下去
     
     # 切片
@@ -74,22 +73,24 @@ def test_matrix_operations():
     # zero相关函数
     zeros_matrix = mm.zeros([3, 3])
     print(zeros_matrix)
-    
+
     A = mm.Matrix(data=[[1, 2, 3], [2, 3, 4]])
-    #mm.zeros_like(A)
+    zeros_like_A = mm.zeros_like(A)
+    print(zeros_like_A)
     
     # one相关函数
     one_matrix = mm.ones([3, 3])
     print(one_matrix)
-    
-    B = mm.Matrix(data = [[1, 2, 3], [2, 3, 4]])
-    #mm.ones_like(B)  
+
+    B = mm.Matrix(data=[[1, 2, 3], [2, 3, 4]])
+    ones_like_B = mm.ones_like(B)
+    print(ones_like_B)
     #这里的报错是Index must be a 2-tuple
     
     # 矩阵拼接
     A, B = mm.Matrix([[0, 1, 2]]), mm.Matrix([[3, 4, 5]])
     print(A.concatenate(B))
-    #A.concatenate(B, A, axis=1)
+    A.concatenate(B, A, axis=1)
     #报错是 if len(A.data[1]) != len(self.data[1]):IndexError: list index out of range
     
     # 测试 nrandom() 和 nrandom_like()
@@ -107,25 +108,24 @@ def test_matrix_operations():
 import random
 
 def test_least_squares():
-    m, n = 1, 1
+    m, n = 2, 2
 
     X = mm.nrandom((m, n))
-    w = [[random.random() for _ in range(n)]]
-    e = [[random.gauss(0, 1) for _ in range(m)]]
-    
-    Y =  X.dot(w).__add__(e)
-    
-    X_transpose = X.transpose()
+    w = mm.Matrix(data=[[random.random() for _ in range(n)] for _ in range(m)])
+    e = mm.Matrix(data=[[random.gauss(0, 1) for _ in range(m)] for _ in range(n)])
+
+    Y = X.dot(w).__add__(e)
+
+    X_transpose = X.T()
     X_transpose_X = X_transpose.dot(X)
     X_transpose_X_inv = X_transpose_X.inverse()
     w1 = X_transpose_X_inv.dot(X_transpose).dot(Y)
-    
+
     print("Original w:")
     print(w)
     print("Estimated w1:")
     print(w1)
-    
-    
+
 if __name__ == "__main__":
     test_matrix_operations()
     test_least_squares()
