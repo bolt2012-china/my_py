@@ -99,20 +99,18 @@ class Matrix:
             >>> [[ 7 10]
                  [15 22]]
         """
-        dim1 = self.dim
-        dim2 = other.dim
-        assert dim1[1] == dim2[0], "Cannot dot matrix with different dimensions."
-        result = [[0 for _ in range(dim1[0])] for _ in range(dim2[1])]
-        i = 0
-        while i < dim1[0]:
-            for j in range(dim2[1]):
-                k = 0
-                while k < dim1[1]:
-                    result[i][j] += self.data[i][k] * other.data[k][j]
-                    k += 1
-            i += 1
 
-        return Matrix(data=result)
+        def dot(self, other):
+            dim1 = self.dim
+            dim2 = other.dim
+            if dim1[1] != dim2[0]:
+                raise ValueError("Cannot dot matrix with different dimensions.")
+            result = [[0 for _ in range(dim2[1])] for _ in range(dim1[0])]
+            for i in range(dim1[0]):
+                for j in range(dim2[1]):
+                    for k in range(dim1[1]):
+                        result[i][j] += self.data[i][k] * other.data[k][j]
+            return Matrix(data=result)
 
     def T(self):
         r"""
@@ -173,23 +171,19 @@ class Matrix:
             >>> [[6]
                  [15]]
         """
-        if axis == None:
-            sum = 0
-            for i in range(self.dim[0]):
-                for j in range(self.dim[1]):
-                    sum += self.data[i][j]
 
-        if axis == 0:
-            sum = [0]*self.dim[1]
-            for j in range(self.dim[1]):
-                for i in range(self.dim[0]):
-                    sum[j] += self.data[i][j]
-
-        elif axis == 1:
-            sum = [0]*self.dim[0]
-            for i in range(self.dim[0]):
-                for j in range(self.dim[1]):
-                    sum[i] += self.data[i][j]
+        def sum(self, axis=None):
+            if axis is None:
+                result = sum(sum(row) for row in self.data)
+                return Matrix(data=[[result]])
+            elif axis == 0:
+                result = [sum(row[i] for row in self.data) for i in range(self.dim[1])]
+                return Matrix(data=[result])
+            elif axis == 1:
+                result = [[sum(row)] for row in self.data]
+                return Matrix(data=result)
+            else:
+                raise ValueError("Invalid axis, should be 0, 1 or None.")
 #axis ==1和0都跑不动
 #报错信息是   if isinstance(data[0], list):TypeError: 'int' object is not subscriptable
 
@@ -230,22 +224,22 @@ class Matrix:
             >>> concatenate((A, B, A), axis=1)
             >>> [[0 1 2 3 4 5 0 1 2]]
         """
-        while axis == 0:
-            for A in items:
-                if len(A.data[0]) != len(self.data[0]):
-                    raise ValueError("The number of columns must be the same for vertical concatenation.")
-                else:
-                    result = self.data + A.data
-                    return Matrix(data=result)
-        while axis == 1:
-            for A in items:
-                if len(A.data[1]) != len(self.data[1]):
-                    raise ValueError("The number of rows must be the same for horizontal concatenation.")
-                else:
-                    result = []
-                    for i in range(self.dim[0]):
-                        result.append(self.data[i] + A.data[i])
-                    return Matrix(data=result)
+
+        def concatenate(self, *items, axis=0):
+            if axis == 0:
+                for A in items:
+                    if len(A.data[0]) != len(self.data[0]):
+                        raise ValueError("The number of columns must be the same for vertical concatenation.")
+                result = self.data + [item.data for item in items]
+                return Matrix(data=result)
+            elif axis == 1:
+                for A in items:
+                    if len(A.data) != len(self.data):
+                        raise ValueError("The number of rows must be the same for horizontal concatenation.")
+                result = [self.data[i] + item.data[i] for item in items for i in range(len(self.data))]
+                return Matrix(data=result)
+            else:
+                raise ValueError("Axis must be 0 or 1.")
 
 
 
@@ -421,19 +415,14 @@ class Matrix:
             ]
     
         return Matrix(data=result_data)
-    
+
     def __mul__(self, other):
-        """两个矩阵对应位置元素相乘"""
-        # 检查两个矩阵的维度是否相同
         if self.dim != other.dim:
             raise ValueError("Matrices must have the same dimensions to perform element-wise multiplication.")
-    
-        # 逐元素相乘，创建新矩阵
         result_data = [
             [self.data[i][j] * other.data[i][j] for j in range(self.dim[1])]
             for i in range(self.dim[0])
-            ]
-    
+        ]
         return Matrix(data=result_data)
     
     def __len__(self):
@@ -592,18 +581,12 @@ def ones_like(matrix):
     return [[1 for _ in range(col)] for _ in range(raw)]
 
 def nrandom(dim):
-    r"""
-    返回一个维数为dim 的随机 narray
-    参数与返回值类型同 zeros
-    """
-    init_value = random.randint(0, 10) #这里报错
-    return narray(dim, init_value)
+    return Matrix(data=[[random.random() for _ in range(dim[1])] for _ in range(dim[0])])
 
 def nrandom_like(matrix):
-    """返回一个维数和 matrix 一样的随机 narray"""
     rows, cols = matrix.dim
-    random_data = [[random.random() for _ in range(cols)] for _ in range(rows)]
-    return Matrix(data=random_data)
+    return Matrix(data=[[random.random() for _ in range(cols)] for _ in range(rows)])
+
 
 def vectorize(func):
     """将给定函数进行向量化"""
