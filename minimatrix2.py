@@ -148,46 +148,45 @@ class Matrix:
 
 
 
-    def sum(self, axis=None):
+
+    def matrix_sum(self, axis=None):
         r"""
-        根据指定的坐标轴对矩阵元素进行求和
+                根据指定的坐标轴对矩阵元素进行求和
 
-        Args:
-            axis: 一个整数，或者 None. 默认值: None
-                  axis = 0 表示对矩阵进行按列求和，得到形状为 (1, self.dim[1]) 的矩阵
-                  axis = 1 表示对矩阵进行按行求和，得到形状为 (self.dim[0], 1) 的矩阵
-                  axis = None 表示对矩阵全部元素进行求和，得到形状为 (1, 1) 的矩阵
+                Args:
+                    axis: 一个整数，或者 None. 默认值: None
+                          axis = 0 表示对矩阵进行按列求和，得到形状为 (1, self.dim[1]) 的矩阵
+                          axis = 1 表示对矩阵进行按行求和，得到形状为 (self.dim[0], 1) 的矩阵
+                          axis = None 表示对矩阵全部元素进行求和，得到形状为 (1, 1) 的矩阵
 
-        Returns:
-            Matrix: 一个 Matrix 类的实例，表示求和结果
+                Returns:
+                    Matrix: 一个 Matrix 类的实例，表示求和结果
 
-        Examples:
-            >>> A = Matrix(data=[[1, 2, 3], [4, 5, 6]])
-            >>> A.sum()
-            >>> [[21]]
-            >>> A.sum(axis=0)
-            >>> [[5 7 9]]
-            >>> A.sum(axis=1)
-            >>> [[6]
-                 [15]]
-        """
-
-        def sum(self, axis=None):
-            if axis is None:
-                result = sum(sum(row) for row in self.data)
-                return Matrix(data=[[result]])
-            elif axis == 0:
-                result = [sum(row[i] for row in self.data) for i in range(self.dim[1])]
-                return Matrix(data=[result])
-            elif axis == 1:
-                result = [[sum(row)] for row in self.data]
-                return Matrix(data=result)
-            else:
-                raise ValueError("Invalid axis, should be 0, 1 or None.")
+                Examples:
+                    >>> A = Matrix(data=[[1, 2, 3], [4, 5, 6]])
+                    >>> A.sum()
+                    >>> [[21]]
+                    >>> A.sum(axis=0)
+                    >>> [[5 7 9]]
+                    >>> A.sum(axis=1)
+                    >>> [[6]
+                         [15]]
+                """
+        if axis is None:
+            result = sum(sum(row) for row in self.data)
+            return Matrix(data=[[result]])
+        elif axis == 0:
+            result = [sum(row[i] for row in self.data) for i in range(self.dim[1])]
+            return Matrix(data=[result])
+        elif axis == 1:
+            result = [[sum(row)] for row in self.data]
+            return Matrix(data=result)
+        else:
+            raise ValueError("Invalid axis, should be 0, 1 or None.")
 #axis ==1和0都跑不动
 #报错信息是   if isinstance(data[0], list):TypeError: 'int' object is not subscriptable
 
-        return Matrix(data=sum)
+        return Matrix(data=self.matrix_sum)
 
 
     def copy(self):
@@ -602,6 +601,10 @@ def vectorize(func):
 
 if __name__ == "__main__":
     print("test here")
+
+  
+
+
 
   
 
